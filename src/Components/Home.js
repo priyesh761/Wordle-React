@@ -177,7 +177,7 @@ function Home() {
         if(freeze) return;
         const lettersPattern = /[A-Z]/;
         const enterPattern = /enter/;                 // enter or  {enter}
-        const backspacePattern = /^b.*k.*s.*p/;           // backspace or {bksp}
+        const backspacePattern = /{*b[a-z]*ksp/;           // backspace or {bksp}
         console.log(key.toLowerCase());
         if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
             setIsEnterPressed(true);
