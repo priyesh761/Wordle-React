@@ -1,175 +1,180 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../css/home.css';
 import Grid from './Grid';
 import { default as Keyboard } from './Keyboard';
 
+const initState = {
+    grid: [[' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' ']],
+    rowIndex: 0,
+    columnIndex: 0,
+    isTyping: false,
+    isEnterPressed: false,
+    isBackspacePressed: false,
+    word: null,
+    freeze: false
+}
+
 function Home() {
 
-    const [grid, setGrid] = useState([[' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ']]);
-    const [rowIndex, setRowIndex] = useState(0);
-    const [columnIndex, setColumnIndex] = useState(0);
-    const [isTyping, setIsTyping] = useState(true);
-    const [isEnterPressed, setIsEnterPressed] = useState(false);
-    const [isBackspacePressed, setBackspacePressed] = useState(false);
-    const [word, setWord] = useState("");
-    const container = useRef(null);
+    const [grid, setGrid] = useState(initState.grid);
+    const [rowIndex, setRowIndex] = useState(initState.rowIndex);
+    const [columnIndex, setColumnIndex] = useState(initState.columnIndex);
+    const [isTyping, setIsTyping] = useState(initState.isTyping);
+    const [isEnterPressed, setIsEnterPressed] = useState(initState.isEnterPressed);
+    const [isBackspacePressed, setBackspacePressed] = useState(initState.isBackspacePressed);
+    const [word, setWord] = useState(initState.word);
+    const [freeze, setFreeze] = useState(initState.freeze);
 
     useEffect(() => {
-        axios.get('https://random-word-api.herokuapp.com/word?length=5').then(data => setWord(data.data[0].toUpperCase()));
+        const getWord = async () => {
+            try {
+                let data = await axios.get('https://random-word-api.herokuapp.com/word?length=5');
+                let word = data.data[0];
+                await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                setWord(word.toUpperCase());
+                setIsTyping(true);
+                console.log("Word Initialized");
+            } catch {
+                await getWord(); // All words from first API are not present in second API
+            }
+        }
+        getWord();
+        return () => {
+            setGrid(initState.grid);
+            setRowIndex(initState.rowIndex);
+            setColumnIndex(initState.columnIndex);
+            setIsTyping(initState.isTyping);
+            setIsEnterPressed(initState.isEnterPressed);
+            setBackspacePressed(initState.isBackspacePressed);
+            setWord(null);
+        }
     }, []);
-    useEffect(() => { container.current.focus() }, [word]);
     useEffect(() => {
+        if(freeze) return;
         if (isEnterPressed !== true) return;
         console.log("enter");
-        
+
         let currentWord = grid[rowIndex].join('');
 
         axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord}`)
-        .then(()=>{
-            
-            // Handle Valid Word
-            let actualWord = word.split('');
-            let letterColorMap = ['', '', '','',''];
+            .then(() => {
 
-            for (let i = 0; i < currentWord.length; i++){
-                if (currentWord[i] === actualWord[i]){
-                    letterColorMap[i] = 'GREEN';
-                    actualWord[i] = '$';
+                // Handle Valid Word
+                let actualWord = word.split('');
+                let letterColorMap = ['', '', '', '', ''];
+
+                for (let i = 0; i < currentWord.length; i++) {
+                    if (currentWord[i] === actualWord[i]) {
+                        letterColorMap[i] = 'GREEN';
+                        actualWord[i] = '$';
+                    }
                 }
-            }
-            for (let i = 0; i < currentWord.length; i++){
-                if (actualWord.includes(currentWord[i].toString())) {
-                    letterColorMap[i] = "ORANGE";
-                    let index = actualWord.indexOf(`${currentWord[i]}`);
-                    actualWord[index] = '$';
+                for (let i = 0; i < currentWord.length; i++) {
+                    if (actualWord.includes(currentWord[i].toString())) {
+                        letterColorMap[i] = "ORANGE";
+                        let index = actualWord.indexOf(`${currentWord[i]}`);
+                        actualWord[index] = '$';
+                    }
                 }
-            }
-            for (let i = 0; i < currentWord.length; i++){
-                if (word.includes(currentWord[i].toString())===false) {
-                    letterColorMap[i] = "GREY";
+                for (let i = 0; i < currentWord.length; i++) {
+                    if (word.includes(currentWord[i].toString()) === false) {
+                        letterColorMap[i] = "GREY";
+                    }
                 }
-            }
-            
-            for (let i = 0; i < currentWord.length; i++){
-                const selector = `[data-row="${rowIndex}"][data-column="${i}"] > .card`;
-                const keySelector = `[data-skbtn="${currentWord[i]}"`;
-                let item = document.querySelector(selector);
-                let key = document.querySelector(keySelector);
-            
-                switch(letterColorMap[i]){
-                    case "GREEN":                               // same letter at current index 
-                        setTimeout(()=>{ 
-                            item.classList.add('green');
-                            key.classList.add('green');
-                        },450*i);
-                        break;
 
-                    case "ORANGE":                              // letter in word excluding repetition
-                        setTimeout(()=>{ 
-                            item.classList.add('orange');
-                            key.classList.add('orange');
-                        },450*i);
-                        break;
-
-                    case "GREY":                                // letter not present in word
-                        setTimeout(()=>{ 
-                            item.classList.add('grey');
-                            key.classList.add('grey');
-                        },450*i);
-                        break;
-
-                    default:                                    // letter present in word but repeated more than its actual occurence
-                        setTimeout(()=> {item.classList.add('grey')},450*i);
-                
-                }
-            }
-
-/*
-            for (let i = 0; i < currentWord.length; i++){ 
-                const selector = `[data-row="${rowIndex}"][data-column="${i}"] > .card`;
-                const keySelector = `[data-skbtn="${actualWord[i]}"`;
-                if (currentWord[i] === actualWord[i]) {
+                for (let i = 0; i < currentWord.length; i++) {
+                    const selector = `[data-row="${rowIndex}"][data-column="${i}"] > .card`;
+                    const keySelector = `[data-skbtn="${currentWord[i]}"`;
                     let item = document.querySelector(selector);
                     let key = document.querySelector(keySelector);
-                    setTimeout(()=>{
-                        item.classList.add('green');
-                        key.classList.add('green');
-                    },450*i);
-                    actualWord[i] = '$';
-                    console.log("green");
-                }
-            }
-            for (let i = 0; i < currentWord.length; i++) {                
-                const selector = `[data-row="${rowIndex}"][data-column="${i}"] > .card`;
-                const keySelector = `[data-skbtn="${actualWord[i]}"`;
-                let item = document.querySelector(selector);
-                let key = document.querySelector(keySelector);
-                setTimeout(()=> item.classList.add('flip'),450*i);
-                if (actualWord.includes(currentWord[i].toString())) {
-                    setTimeout(()=>{ 
-                        item.classList.add('orange');
-                        key.classList.add('orange');
-                    },450*i);
-                    let index = actualWord.indexOf(`${currentWord[i]}`);
-                    actualWord[index] = '$';
-                    console.log("orange");
-                }else if(actualWord[i]!=='$'){
-                    setTimeout(()=> item.classList.add('grey'),450*i);
-                }
-            } 
-*/
 
-            // Handle index
-            if (rowIndex < 5) setIsTyping(true);
-            setRowIndex(rowIndex => rowIndex === 5 ? rowIndex : rowIndex + 1);
-            setColumnIndex(() => rowIndex === 5 ? columnIndex : 0);
-            console.log('updated');
-        })
-        .catch((err)=>{
-            console.log(err);
-            document.querySelectorAll(`[data-row="${rowIndex}"]`)
+                    switch (letterColorMap[i]) {
+                        case "GREEN":                               // same letter at current index 
+                            setTimeout(() => {
+                                item.classList.add('flip');
+                                item.classList.add('green');
+                                key.classList.add('green');
+                            }, 450 * i);
+                            break;
+
+                        case "ORANGE":                              // letter in word excluding repetition
+                            setTimeout(() => {
+                                item.classList.add('flip');
+                                item.classList.add('orange');
+                                key.classList.add('orange');
+                            }, 450 * i);
+                            break;
+
+                        case "GREY":                                // letter not present in word
+                            setTimeout(() => {
+                                item.classList.add('flip');
+                                item.classList.add('grey');
+                                key.classList.add('grey');
+                            }, 450 * i);
+                            break;
+
+                        default:                                    // letter present in word but repeated more than its actual occurence
+                            setTimeout(() => {
+                                item.classList.add('flip');
+                                item.classList.add('grey')
+                            }, 450 * i);
+
+                    }
+                }
+
+                // Handle index
+                if (rowIndex < 5) setIsTyping(true);
+                setColumnIndex(() => rowIndex === 5 ? columnIndex : 0);
+                setRowIndex(rowIndex => rowIndex === 5 ? rowIndex : rowIndex + 1);
+                debugger;
+                if(rowIndex===5&&columnIndex===5) setFreeze(true);
+                console.log('updated');
+            })
+            .catch((err) => {
+                console.log(err);
+                document.querySelectorAll(`[data-row="${rowIndex}"]`)
                     .forEach(ele => {
                         ele.classList.add('shake');
                         setTimeout(() => { ele.classList.remove('shake') }, 1000);
                     });
-            return;
-        }).finally(()=>{
-            setIsEnterPressed(false);
+                return;
+            }).finally(() => {
+                setIsEnterPressed(false);
+            });
+        // eslint-disable-next-line
+    }, [isEnterPressed]);
+    useEffect(() => {
+        if(freeze) return;
+        if (isBackspacePressed === false) return;
+        console.log("backspace");
+        setIsTyping(true);
+        
+        setColumnIndex(columnIndex => {
+            if (columnIndex === 0)
+                return columnIndex;
+            setGrid(grid => {
+                //current column index points to fist " " so columnIndex-1 points to last alphabet
+                grid[rowIndex][columnIndex - 1] = " ";
+                const selector = `[data-row="${rowIndex}"][data-column="${columnIndex - 1}"]`;
+                document.querySelector(selector).classList.add('clicked');
+                setTimeout(() => { document.querySelector(selector).classList.remove('clicked') }, 500);
+                return grid;
+            });
+            return columnIndex - 1
         });
 
-    }, [isEnterPressed]);
+        setBackspacePressed(false);
 
-    useEffect(() => {
-        setIsTyping(true);
-        if (isBackspacePressed) {
-            console.log("backspace");
-
-            setColumnIndex(columnIndex => {
-                if (columnIndex === 0)
-                    return columnIndex;
-                setGrid(grid => {
-                    //current column index points to fist " " so columnIndex-1 points to last alphabet
-                    grid[rowIndex][columnIndex - 1] = " ";
-                    document.querySelector(`[data-row="${rowIndex}"][data-column="${columnIndex-1}"]`).classList.add('clicked');
-                    setTimeout(()=>{document.querySelector(`[data-row="${rowIndex}"][data-column="${columnIndex-1}"]`).classList.remove('clicked')}, 500);
-                    console.log(grid);
-                    return grid;
-                });
-                return columnIndex - 1
-            });
-
-            setBackspacePressed(false);
-        }
+        // eslint-disable-next-line
     }, [isBackspacePressed]);
-
-
     const handleKeyDown = (key) => {
+        if(freeze) return;
         const lettersPattern = /[A-Z]/;
         const enterPattern = /enter/;                 // enter or  {enter}
         const backspacePattern = /^b.*k.*s.*p/;           // backspace or {bksp}
@@ -183,12 +188,13 @@ function Home() {
             console.log(key);
 
             setGrid(grid => {
-                if (rowIndex < grid.length && columnIndex < grid[rowIndex].length && columnIndex >= 0){
+                if (rowIndex < grid.length && columnIndex < grid[rowIndex].length && columnIndex >= 0) {
                     grid[rowIndex][columnIndex] = key.toUpperCase();
-                    document.querySelector(`[data-row="${rowIndex}"][data-column="${columnIndex}"]`).classList.add('clicked');
-                    setTimeout(()=>{document.querySelector(`[data-row="${rowIndex}"][data-column="${columnIndex}"]`).classList.remove('clicked')}, 500);
+                    const selector = `[data-row="${rowIndex}"][data-column="${columnIndex}"]`;
+                    document.querySelector(selector).classList.add('clicked');
+                    setTimeout(() => { document.querySelector(selector).classList.remove('clicked') }, 500);
                 }
-                
+
                 return grid;
             })
             setColumnIndex(colInd => {
@@ -200,23 +206,20 @@ function Home() {
         }
     };
 
-
-    if (word == null) return "loading";
     return (
-        <div>
+        <div id="home" className='container' tabIndex={0} onKeyDown={(e) => handleKeyDown(e.key.toUpperCase())}>
+            <header>
+                <h1>Custom Wordle   </h1>
+            </header>
             {word == null && <span>Loading...</span>}
             {word != null &&
-                <div ref={container} className='container' tabIndex={0} onKeyDown={(e) => handleKeyDown(e.key.toUpperCase())}>
-                    <header>
-                        <h1>Custom Wordle-{word}</h1>
-                    </header>
-                    <main className='main' >
-                        <Grid grid={grid} rowIndex={rowIndex} columnIndex={columnIndex} />
-                        <Keyboard setGrid={setGrid} handleKeyDown={handleKeyDown} />
-                    </main>
-                </div>
+                <main className='main' >
+                    <Grid grid={grid} rowIndex={rowIndex} columnIndex={columnIndex} />
+                    <Keyboard setGrid={setGrid} handleKeyDown={handleKeyDown} />
+                </main>
             }
         </div>
+
     );
 }
 

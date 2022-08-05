@@ -5,21 +5,18 @@
   flex-wrap: wrap;
   max-width: 800px;
 }
-
 @media (max-width: 750px) {
   .grid {
     width: 100%;
     flex-direction: column;
   }
 }
-
 .grid-container {
   display: grid;
   grid-template-columns: auto auto auto auto auto;
   background-color: transparent;
   padding: 10px;
 }
-
 .grid-item {
   background-color: transparent;
   border: 0;
@@ -33,11 +30,9 @@
   align-items: center;
   box-sizing: border-box;
 }
-
 .clicked{
   animation: zoom-in-zoom-out 0.2s ease-out;
 }
-
 @keyframes zoom-in-zoom-out {
   0% {
     transform: scale(1, 1);
@@ -49,14 +44,12 @@
     transform: scale(1, 1);
   }
 }
-
 .shake {
   animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   perspective: 1000px;
 }
-
 @keyframes shake {
   10%, 90% {
     transform: translate3d(-0.5px, 0, 0);
@@ -74,61 +67,40 @@
     transform: translate3d(2px, 0, 0);
   }
 }
-
 .orange{
   animation: orange 500ms ease-in;
   animation-fill-mode: forwards;
 }
-
 .green{
   animation: green 500ms ease-in;
   animation-fill-mode: forwards;
 }
-
 .grey{
   animation: grey 500ms ease-in;
   animation-fill-mode: forwards;
 }
-
 @keyframes orange {
-  from {
-    background-color: black;
-    color: wheat;
-  }
   to {
     background-color: #b59f3b;
     color: white;
   }
 }
-
 @keyframes green {
-  from {
-    background-color: black;
-    color: wheat;
-  }
   to {
     background-color: #538d4e;
     color: white;
   }
 }
-
 @keyframes grey {
-  from {
-    background-color: black;
-    color: wheat;
-  }
   to {
     background-color: #3a3a3c;
     color: white;
   }
 }
-
-
 input {
   color: transparent;
   text-shadow: 0 0 0 white;
 }
-
 .card-wrapper {
   perspective:500px;
   
@@ -164,7 +136,6 @@ input {
   transform: rotateX(180deg); 
   transition: 500ms;
 }
-
 .flip > .front{
   -ms-transform: rotateX(180deg); /* IE 9 */
   -webkit-transform: rotateX(180deg); /* Safari Chrome */
