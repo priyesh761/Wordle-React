@@ -20,8 +20,8 @@ input {
   }
   
   .simple-keyboard.myTheme1 .hg-button {
-    height: 30px;
-    min-width: 30px;
+    height: 40px;
+    min-width: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -30,6 +30,13 @@ input {
     color: white;
   }
   
+  @media (max-width: 750px) {
+    .simple-keyboard.myTheme1 .hg-button {
+      height: auto;
+      min-width: auto;
+    }
+  }
+
   .keyboard{
     margin: 5px;
   }

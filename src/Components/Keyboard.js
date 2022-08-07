@@ -17,7 +17,7 @@ const display = {
 
 function keyboard({handleKeyDown}) {
   return (
-    <div className="keyboard">
+    <div className="keyboard col-12 col-md-8">
       <Keyboard
         theme={"hg-theme-default myTheme1"}
         layout={layout}

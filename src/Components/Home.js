@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../css/home.css';
 import Grid from './Grid';
+import Navbar from './Navbar';
 import { default as Keyboard } from './Keyboard';
 
 const initState = {
@@ -45,6 +46,7 @@ function Home() {
             }
         }
         getWord();
+        
         return () => {
             setGrid(initState.grid);
             setRowIndex(initState.rowIndex);
@@ -176,9 +178,10 @@ function Home() {
     const handleKeyDown = (key) => {
         if(freeze) return;
         const lettersPattern = /[A-Z]/;
-        const enterPattern = /enter/;                 // enter or  {enter}
-        const backspacePattern = /{*b[a-z]*ksp/;           // backspace or {bksp}
+        const enterPattern = /enter|{enter}/;                 // enter or  {enter}
+        const backspacePattern = /backspace|{bksp}/;           // backspace or {bksp}
         console.log(key.toLowerCase());
+        
         if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
             setIsEnterPressed(true);
         } else if (key.toLowerCase().match(backspacePattern))
@@ -207,13 +210,13 @@ function Home() {
     };
 
     return (
-        <div id="home" className='container' tabIndex={0} onKeyDown={(e) => handleKeyDown(e.key.toUpperCase())}>
-            <header>
-                <h1>Custom Wordle   </h1>
+        <div id="home" className='container-fluid justify-content-around' tabIndex={0} onKeyDown={(e) => handleKeyDown(e.key.toUpperCase())}>
+            <header className='col-12'>
+                <Navbar />
             </header>
             {word == null && <span>Loading...</span>}
             {word != null &&
-                <main className='main' >
+                <main className='row justify-content-center align-content-center' >
                     <Grid grid={grid} rowIndex={rowIndex} columnIndex={columnIndex} />
                     <Keyboard setGrid={setGrid} handleKeyDown={handleKeyDown} />
                 </main>
