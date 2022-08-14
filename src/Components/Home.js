@@ -3,6 +3,7 @@ import axios from 'axios';
 import '../css/home.css';
 import Grid from './Grid';
 import Navbar from './Navbar';
+import Confetti from 'react-confetti'
 import { default as Keyboard } from './Keyboard';
 
 const initState = {
@@ -12,18 +13,22 @@ const initState = {
     [' ', ' ', ' ', ' ', ' '],
     [' ', ' ', ' ', ' ', ' '],
     [' ', ' ', ' ', ' ', ' ']],
-    rowIndex: 0,
-    columnIndex: 0,
-    isTyping: false,
-    isEnterPressed: false,
-    isBackspacePressed: false,
-    word: null,
-    freeze: false
+    rowIndex : 0,
+    columnIndex : 0,
+    isTyping : false,
+    isEnterPressed : false,
+    isBackspacePressed : false,
+    word : null,
+    freeze : false,
+    startGame : false,
+    showInfo : true,
+    gameWon : null
+    
 }
 
 function Home() {
 
-    const [grid, setGrid] = useState(initState.grid);
+    const [grid, setGrid] = useState(JSON.parse(JSON.stringify(initState.grid)));
     const [rowIndex, setRowIndex] = useState(initState.rowIndex);
     const [columnIndex, setColumnIndex] = useState(initState.columnIndex);
     const [isTyping, setIsTyping] = useState(initState.isTyping);
@@ -31,32 +36,46 @@ function Home() {
     const [isBackspacePressed, setBackspacePressed] = useState(initState.isBackspacePressed);
     const [word, setWord] = useState(initState.word);
     const [freeze, setFreeze] = useState(initState.freeze);
+    const [startGame, setStartGame] = useState(initState.startGame);
+    const [showInfo, setShowInfo] = useState(initState.showInfo);
+    const [gameWon, setGameWon] = useState(initState.gameWon);
 
+    const setInitState = () => {
+        setGrid(JSON.parse(JSON.stringify(initState.grid)));
+        setRowIndex(initState.rowIndex);
+        setColumnIndex(initState.columnIndex);
+        setIsTyping(initState.isTyping);
+        setIsEnterPressed(initState.isEnterPressed);
+        setBackspacePressed(initState.isBackspacePressed);
+        setWord(initState.null);
+        setFreeze(initState.freeze);
+        setStartGame(initState.startGame);
+        setShowInfo(initState.showInfo);
+        setGameWon(initState.gameWon);
+    }  
+    const getWord = async () => {
+        try {
+            let data = await axios.get('https://random-word-api.herokuapp.com/word?length=5');
+            let word = data.data[0];
+            await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+            setWord(word.toUpperCase());
+            setIsTyping(true);
+            console.log("Word Initialized");
+        } catch {
+            await getWord(); // All words from first API are not present in second API
+        }
+    }
     useEffect(() => {
-        const getWord = async () => {
-            try {
-                let data = await axios.get('https://random-word-api.herokuapp.com/word?length=5');
-                let word = data.data[0];
-                await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                setWord(word.toUpperCase());
-                setIsTyping(true);
-                console.log("Word Initialized");
-            } catch {
-                await getWord(); // All words from first API are not present in second API
-            }
-        }
-        getWord();
-        
-        return () => {
-            setGrid(initState.grid);
-            setRowIndex(initState.rowIndex);
-            setColumnIndex(initState.columnIndex);
-            setIsTyping(initState.isTyping);
-            setIsEnterPressed(initState.isEnterPressed);
-            setBackspacePressed(initState.isBackspacePressed);
-            setWord(null);
-        }
-    }, []);
+        if(startGame===false) return;
+        getWord();   
+        // eslint-disable-next-line
+    }, [startGame]);
+    useEffect(()=>{
+        if(freeze===true)
+            setTimeout(()=>{
+                setInitState();
+            }, 5000)
+    }, [freeze])
     useEffect(() => {
         if(freeze) return;
         if (isEnterPressed !== true) return;
@@ -90,8 +109,9 @@ function Home() {
                     }
                 }
 
+                let countGreen = 0;
                 for (let i = 0; i < currentWord.length; i++) {
-                    const selector = `[data-row="${rowIndex}"][data-column="${i}"] > .card`;
+                    const selector = `[data-row="${rowIndex}"][data-column="${i}"] > .card-custom`;
                     const keySelector = `[data-skbtn="${currentWord[i]}"`;
                     let item = document.querySelector(selector);
                     let key = document.querySelector(keySelector);
@@ -103,6 +123,7 @@ function Home() {
                                 item.classList.add('green');
                                 key.classList.add('green');
                             }, 450 * i);
+                            countGreen++;
                             break;
 
                         case "ORANGE":                              // letter in word excluding repetition
@@ -134,8 +155,12 @@ function Home() {
                 if (rowIndex < 5) setIsTyping(true);
                 setColumnIndex(() => rowIndex === 5 ? columnIndex : 0);
                 setRowIndex(rowIndex => rowIndex === 5 ? rowIndex : rowIndex + 1);
-                debugger;
+
                 if(rowIndex===5&&columnIndex===5) setFreeze(true);
+                if(countGreen===5){ 
+                    setGameWon(true);
+                    setFreeze(true);
+                }
                 console.log('updated');
             })
             .catch((err) => {
@@ -211,16 +236,17 @@ function Home() {
 
     return (
         <div id="home" className='container-fluid justify-content-around' tabIndex={0} onKeyDown={(e) => handleKeyDown(e.key.toUpperCase())}>
-            <header className='col-12'>
-                <Navbar />
+            <header className='row'>
+                <Navbar startGame={startGame} setStartGame={setStartGame} showInfo={showInfo} setShowInfo={setShowInfo}/>
             </header>
-            {word == null && <span>Loading...</span>}
-            {word != null &&
-                <main className='row justify-content-center align-content-center' >
+            {(startGame===false || word == null) && <span>Loading...</span>}
+            {startGame===true && word != null &&
+                <main className='row justify-content-center' >
                     <Grid grid={grid} rowIndex={rowIndex} columnIndex={columnIndex} />
                     <Keyboard setGrid={setGrid} handleKeyDown={handleKeyDown} />
                 </main>
             }
+            { gameWon && <Confetti />}
         </div>
 
     );
