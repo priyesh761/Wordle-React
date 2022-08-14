@@ -23,7 +23,6 @@ const initState = {
     startGame : false,
     showInfo : true,
     gameWon : null
-    
 }
 
 function Home() {
@@ -74,7 +73,7 @@ function Home() {
         if(freeze===true)
             setTimeout(()=>{
                 setInitState();
-            }, 5000)
+            }, 8000)
     }, [freeze])
     useEffect(() => {
         if(freeze) return;
