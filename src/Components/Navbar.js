@@ -36,7 +36,7 @@ function Navbar({ startGame, setStartGame, showInfo, setShowInfo }) {
                             <div>
                                 <div><strong>Examples</strong></div>
                                 <div>
-                                    <div className='grid'>
+                                    <div className='d-flex flex-row'>
                                         <div className='grid-item text-light rounded bg-success'>W</div>
                                         <div className='grid-item text-light rounded bg-dark'>E</div>
                                         <div className='grid-item text-light rounded bg-dark'>A</div>
@@ -46,7 +46,7 @@ function Navbar({ startGame, setStartGame, showInfo, setShowInfo }) {
                                     <div>The letter W is in the word and in the correct spot.</div>
                                 </div>
                                 <div>
-                                <div className='grid'>
+                                <div className='d-flex flex-row'>
                                         <div className='grid-item text-light rounded bg-dark'>P</div>
                                         <div className='grid-item text-light rounded bg-warning'>I</div>
                                         <div className='grid-item text-light rounded bg-dark'>L</div>
@@ -56,7 +56,7 @@ function Navbar({ startGame, setStartGame, showInfo, setShowInfo }) {
                                     <div>The letter I is in the word but in the wrong spot.</div>
                                 </div>
                                 <div>
-                                <div className='grid'>
+                                <div className='d-flex flex-row'>
                                         <div className='grid-item text-light rounded bg-dark'>V</div>
                                         <div className='grid-item text-light rounded bg-dark'>A</div>
                                         <div className='grid-item text-light rounded bg-dark'>G</div>
