@@ -3,6 +3,7 @@ import axios from 'axios';
 import '../css/home.css';
 import Grid from './Grid';
 import Navbar from './Navbar';
+import Spinner from './Spinner';
 import Confetti from 'react-confetti'
 import { default as Keyboard } from './Keyboard';
 
@@ -238,7 +239,7 @@ function Home() {
             <header className='row'>
                 <Navbar startGame={startGame} setStartGame={setStartGame} showInfo={showInfo} setShowInfo={setShowInfo}/>
             </header>
-            {(startGame===false || word == null) && <span>Loading...</span>}
+            {(startGame===false || word == null) && <Spinner />}
             {startGame===true && word != null &&
                 <main className='row justify-content-center' >
                     <Grid grid={grid} rowIndex={rowIndex} columnIndex={columnIndex} />
