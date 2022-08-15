@@ -7,7 +7,6 @@ function Navbar({ startGame, setStartGame, showInfo, setShowInfo }) {
     const handleClick = ()=>{
         setStartGame(true);
         setShowInfo(false);
-        console.log('clicked')
     }
     return (
         <nav className="navbar navbar-dark justify-content-between col-12">

@@ -79,7 +79,7 @@ function Home() {
     useEffect(() => {
         if(freeze) return;
         if (isEnterPressed !== true) return;
-        console.log("enter");
+        //console.log("enter");
 
         let currentWord = grid[rowIndex].join('');
 
@@ -161,10 +161,10 @@ function Home() {
                     setGameWon(true);
                     setFreeze(true);
                 }
-                console.log('updated');
+                //console.log('updated');
             })
             .catch((err) => {
-                console.log(err);
+                //console.log(err);
                 document.querySelectorAll(`[data-row="${rowIndex}"]`)
                     .forEach(ele => {
                         ele.classList.add('shake');
@@ -179,7 +179,7 @@ function Home() {
     useEffect(() => {
         if(freeze) return;
         if (isBackspacePressed === false) return;
-        console.log("backspace");
+        //console.log("backspace");
         setIsTyping(true);
         
         setColumnIndex(columnIndex => {
@@ -205,7 +205,7 @@ function Home() {
         const lettersPattern = /[A-Z]/;
         const enterPattern = /enter|{enter}/;                 // enter or  {enter}
         const backspacePattern = /backspace|{bksp}/;           // backspace or {bksp}
-        console.log(key.toLowerCase());
+        //console.log(key.toLowerCase());
         
         if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
             setIsEnterPressed(true);
@@ -213,7 +213,6 @@ function Home() {
             setBackspacePressed(true);
         else {
             if (isTyping === false || key.length !== 1 || key.match(lettersPattern) == null) return;
-            console.log(key);
 
             setGrid(grid => {
                 if (rowIndex < grid.length && columnIndex < grid[rowIndex].length && columnIndex >= 0) {
@@ -230,7 +229,6 @@ function Home() {
                     setIsTyping(false);
                 return colInd + 1;
             });
-            console.log(rowIndex, columnIndex);
         }
     };
 
