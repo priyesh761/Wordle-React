@@ -5,6 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Set Github
+        run: |
+          git config --global user.email "shettypriyesh761@gmail.com"
+          git config --global user.name "Priyesh Shetty"
       - uses: actions/setup-node@v2
         with:
           node-version: '16.15.1'
