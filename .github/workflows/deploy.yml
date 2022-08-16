@@ -1,18 +1,22 @@
 name: Deploy Wordle
-on: [push]
+on: 
+  push:
+    branches: ["master"]
 jobs:
   build-app:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set Github
-        run: |
-          git config --global user.email "shettypriyesh761@gmail.com"
-          git config --global user.name "priyesh761"
-      - uses: actions/setup-node@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v2
         with:
           node-version: '16.15.1'
       - name: Install node_modules
         run: npm install
-      - name: Build And Deploy
-        run: npm run deploy
+      - name: Build
+        run: npm run build
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
