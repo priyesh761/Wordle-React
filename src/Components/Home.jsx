@@ -39,6 +39,21 @@ function Home() {
     const [startGame, setStartGame] = useState(initState.startGame);
     const [showInfo, setShowInfo] = useState(initState.showInfo);
     const [gameWon, setGameWon] = useState(initState.gameWon);
+    const [windowDimensions, setWindowDimensions] = useState({ 
+        width: window.innerWidth, 
+        height: window.innerHeight 
+    });
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowDimensions({
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const setInitState = () => {
         setGrid(JSON.parse(JSON.stringify(initState.grid)));
@@ -187,11 +202,12 @@ function Home() {
                 return columnIndex;
             setGrid(grid => {
                 //current column index points to fist " " so columnIndex-1 points to last alphabet
-                grid[rowIndex][columnIndex - 1] = " ";
+                const newGrid = grid.map(row => [...row]);
+                newGrid[rowIndex][columnIndex - 1] = " ";
                 const selector = `[data-row="${rowIndex}"][data-column="${columnIndex - 1}"]`;
                 document.querySelector(selector).classList.add('clicked');
                 setTimeout(() => { document.querySelector(selector).classList.remove('clicked') }, 500);
-                return grid;
+                return newGrid;
             });
             return columnIndex - 1
         });
@@ -205,7 +221,6 @@ function Home() {
         const lettersPattern = /[A-Z]/;
         const enterPattern = /enter|{enter}/;                 // enter or  {enter}
         const backspacePattern = /backspace|{bksp}/;           // backspace or {bksp}
-        //console.log(key.toLowerCase());
         
         if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
             setIsEnterPressed(true);
@@ -215,14 +230,14 @@ function Home() {
             if (isTyping === false || key.length !== 1 || key.match(lettersPattern) == null) return;
 
             setGrid(grid => {
-                if (rowIndex < grid.length && columnIndex < grid[rowIndex].length && columnIndex >= 0) {
-                    grid[rowIndex][columnIndex] = key.toUpperCase();
+                const newGrid = grid.map(row => [...row]);
+                if (rowIndex < newGrid.length && columnIndex < newGrid[rowIndex].length && columnIndex >= 0) {
+                    newGrid[rowIndex][columnIndex] = key.toUpperCase();
                     const selector = `[data-row="${rowIndex}"][data-column="${columnIndex}"]`;
                     document.querySelector(selector).classList.add('clicked');
                     setTimeout(() => { document.querySelector(selector).classList.remove('clicked') }, 500);
                 }
-
-                return grid;
+                return newGrid;
             })
             setColumnIndex(colInd => {
                 if (colInd === 4)
@@ -244,7 +259,7 @@ function Home() {
                     <Keyboard setGrid={setGrid} handleKeyDown={handleKeyDown} />
                 </main>
             }
-            { gameWon && <Confetti />}
+            { gameWon && <Confetti width={windowDimensions.width} height={windowDimensions.height} />}
         </div>
 
     );
