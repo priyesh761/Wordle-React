@@ -11,7 +11,7 @@ import gameReducer, {initialState} from '../reducers/gameReducer';
 function Home() {
 
     const [state, dispatch] = useReducer(gameReducer, initialState);
-    const { word, startGame, grid, columnIndex, isTyping, rowIndex, freeze, showInfo, gameWon, isEnterPressed, isBackspacePressed } = state;
+    const { word, startGame, grid, columnIndex, isTyping, rowIndex, freeze, showInfo, gameWon, isEnterPressed, isBackspacePressed, isShaking } = state;
 
     const [windowDimensions, setWindowDimensions] = useState({ 
         width: window.innerWidth, 
@@ -131,11 +131,10 @@ function Home() {
                 }
             })
             .catch(() => {
-                document.querySelectorAll(`[data-row="${rowIndex}"]`)
-                    .forEach(ele => {
-                        ele.classList.add('shake');
-                        setTimeout(() => { ele.classList.remove('shake') }, 1000);
-                    });
+                dispatch({ type: 'SET_ROW_SHAKING', payload: { row: rowIndex, value: true } });
+                setTimeout(() => {
+                    dispatch({ type: 'SET_ROW_SHAKING', payload: { row: rowIndex, value: false } });
+                }, 1000);
                 dispatch({ type: 'SET_ENTER_PRESSED', payload: false });
                 return;
             });
@@ -186,7 +185,7 @@ function Home() {
             {(startGame===false || word == null) && <Spinner />}
             {startGame===true && word != null &&
                 <main className='row justify-content-center' >
-                    <Grid grid={grid} rowIndex={rowIndex} columnIndex={columnIndex} />
+                    <Grid grid={grid} isShaking={isShaking} />
                     <Keyboard handleKeyDown={handleKeyDown} />
                 </main>
             }

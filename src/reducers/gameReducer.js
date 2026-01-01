@@ -1,5 +1,6 @@
 export const initialState = {
     grid: Array(6).fill().map(() => Array(5).fill(' ')),
+    isShaking: Array(6).fill(false),
     rowIndex : 0,
     columnIndex : 0,
     isTyping : false,
@@ -18,8 +19,6 @@ export default function gameReducer(state, action) {
       return { ...state, startGame: true };
     case 'SET_WORD':
       return { ...state, word: action.payload, isTyping: true };
-    case 'WORD_LOADED':
-      return;
     case 'TYPE_LETTER': {
       const { rowIndex, columnIndex, grid } = state;
       if (rowIndex >= grid.length || columnIndex >= grid[rowIndex].length || columnIndex < 0) {
@@ -65,6 +64,12 @@ export default function gameReducer(state, action) {
       return { ...state, isEnterPressed: action.payload };
     case 'SET_BACKSPACE_PRESSED':
       return { ...state, isBackspacePressed: action.payload };
+    case 'SET_ROW_SHAKING': {
+      const { row, value } = action.payload;
+      const newIsShaking = [...state.isShaking];
+      newIsShaking[row] = value;
+      return { ...state, isShaking: newIsShaking };
+    }
     case 'SET_FREEZE':
       return { ...state, freeze: action.payload };
     case 'SET_GAME_WON':
