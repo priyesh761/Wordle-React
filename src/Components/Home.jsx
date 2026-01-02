@@ -25,6 +25,7 @@ function Home() {
     isShaking,
     cellStates,
     keyColors,
+    clickedCell,
   } = state;
 
   const [windowDimensions, setWindowDimensions] = useState({
@@ -69,7 +70,6 @@ function Home() {
   useEffect(() => {
     if (freeze) return;
     if (isEnterPressed !== true) return;
-    //console.log("enter");
 
     let currentWord = grid[rowIndex].join("");
 
@@ -144,16 +144,14 @@ function Home() {
     dispatch({ type: "DELETE_LETTER" });
 
     if (columnIndex > 0) {
-      const selector = `[data-row="${rowIndex}"][data-column="${
-        columnIndex - 1
-      }"]`;
-      const element = document.querySelector(selector);
-      if (element) {
-        element.classList.add("clicked");
-        setTimeout(() => {
-          element.classList.remove("clicked");
-        }, 500);
-      }
+      dispatch({
+        type: "SET_CLICKED_CELL",
+        payload: { row: rowIndex, col: columnIndex - 1 },
+      });
+      setTimeout(
+        () => dispatch({ type: "SET_CLICKED_CELL", payload: null }),
+        500
+      );
     }
 
     dispatch({ type: "SET_BACKSPACE_PRESSED", payload: false });
@@ -175,15 +173,15 @@ function Home() {
         key.match(lettersPattern) == null
       )
         return;
+      dispatch({
+        type: "SET_CLICKED_CELL",
+        payload: { row: rowIndex, col: columnIndex },
+      });
+      setTimeout(
+        () => dispatch({ type: "SET_CLICKED_CELL", payload: null }),
+        500
+      );
       dispatch({ type: "TYPE_LETTER", payload: key.toUpperCase() });
-      const selector = `[data-row="${rowIndex}"][data-column="${columnIndex}"]`;
-      const element = document.querySelector(selector);
-      if (element) {
-        element.classList.add("clicked");
-        setTimeout(() => {
-          element.classList.remove("clicked");
-        }, 500);
-      }
     }
   };
 
@@ -205,7 +203,12 @@ function Home() {
       {(startGame === false || word == null) && <Spinner />}
       {startGame === true && word != null && (
         <main className="row justify-content-center">
-          <Grid grid={grid} isShaking={isShaking} cellStates={cellStates} />
+          <Grid
+            grid={grid}
+            isShaking={isShaking}
+            cellStates={cellStates}
+            clickedCell={clickedCell}
+          />
           <Keyboard handleKeyDown={handleKeyDown} keyColors={keyColors} />
         </main>
       )}

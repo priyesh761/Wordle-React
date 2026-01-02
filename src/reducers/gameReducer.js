@@ -3,6 +3,7 @@ export const initialState = {
     cellStates: Array(6).fill().map(() => Array(5).fill(null)),
     isShaking: Array(6).fill(false),
     keyColors: {},
+    clickedCell: null,
     rowIndex : 0,
     columnIndex : 0,
     isTyping : false,
@@ -88,6 +89,8 @@ export default function gameReducer(state, action) {
       }
       return { ...state, keyColors: { ...state.keyColors, [key]: color } };
     }
+    case 'SET_CLICKED_CELL':
+      return { ...state, clickedCell: action.payload };
     case 'SET_FREEZE':
       return { ...state, freeze: action.payload };
     case 'SET_GAME_WON':
