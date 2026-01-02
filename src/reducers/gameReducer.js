@@ -1,6 +1,8 @@
 export const initialState = {
     grid: Array(6).fill().map(() => Array(5).fill(' ')),
+    cellStates: Array(6).fill().map(() => Array(5).fill(null)),
     isShaking: Array(6).fill(false),
+    keyColors: {},
     rowIndex : 0,
     columnIndex : 0,
     isTyping : false,
@@ -69,6 +71,22 @@ export default function gameReducer(state, action) {
       const newIsShaking = [...state.isShaking];
       newIsShaking[row] = value;
       return { ...state, isShaking: newIsShaking };
+    }
+    case 'SET_CELL_STATE': {
+      const { row, col, color } = action.payload;
+      const newCellStates = state.cellStates.map(r => [...r]);
+      newCellStates[row][col] = color;
+      return { ...state, cellStates: newCellStates };
+    }
+    case 'SET_KEY_COLOR': {
+      const { key, color } = action.payload;
+      // Only update if new color has higher priority (green > orange > grey)
+      const colorPriority = { green: 3, orange: 2, grey: 1 };
+      const currentColor = state.keyColors[key];
+      if (currentColor && colorPriority[currentColor] >= colorPriority[color]) {
+        return state;
+      }
+      return { ...state, keyColors: { ...state.keyColors, [key]: color } };
     }
     case 'SET_FREEZE':
       return { ...state, freeze: action.payload };

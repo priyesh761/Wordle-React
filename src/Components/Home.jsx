@@ -11,7 +11,7 @@ import gameReducer, {initialState} from '../reducers/gameReducer';
 function Home() {
 
     const [state, dispatch] = useReducer(gameReducer, initialState);
-    const { word, startGame, grid, columnIndex, isTyping, rowIndex, freeze, showInfo, gameWon, isEnterPressed, isBackspacePressed, isShaking } = state;
+    const { word, startGame, grid, columnIndex, isTyping, rowIndex, freeze, showInfo, gameWon, isEnterPressed, isBackspacePressed, isShaking, cellStates, keyColors } = state;
 
     const [windowDimensions, setWindowDimensions] = useState({ 
         width: window.innerWidth, 
@@ -61,67 +61,33 @@ function Home() {
 
                 // Handle Valid Word
                 let actualWord = word.split('');
-                let letterColorMap = ['', '', '', '', ''];
+                let letterColorMap = Array.from({ length: 5 }, () => 'grey');
 
                 for (let i = 0; i < currentWord.length; i++) {
                     if (currentWord[i] === actualWord[i]) {
-                        letterColorMap[i] = 'GREEN';
+                        letterColorMap[i] = 'green';
                         actualWord[i] = '$';
                     }
                 }
                 for (let i = 0; i < currentWord.length; i++) {
-                    if (actualWord.includes(currentWord[i].toString())) {
-                        letterColorMap[i] = "ORANGE";
-                        let index = actualWord.indexOf(`${currentWord[i]}`);
+                    if (letterColorMap[i] !== 'green' && actualWord.includes(currentWord[i])) {
+                        letterColorMap[i] = 'orange';
+                        let index = actualWord.indexOf(currentWord[i]);
                         actualWord[index] = '$';
-                    }
-                }
-                for (let i = 0; i < currentWord.length; i++) {
-                    if (word.includes(currentWord[i].toString()) === false) {
-                        letterColorMap[i] = "GREY";
                     }
                 }
 
                 let countGreen = 0;
                 for (let i = 0; i < currentWord.length; i++) {
-                    const selector = `[data-row="${rowIndex}"][data-column="${i}"] > .card-custom`;
-                    const keySelector = `[data-skbtn="${currentWord[i]}"`;
-                    let item = document.querySelector(selector);
-                    let key = document.querySelector(keySelector);
+                    const color = letterColorMap[i];
+                    const letter = currentWord[i];
 
-                    switch (letterColorMap[i]) {
-                        case "GREEN":                               // same letter at current index 
-                            setTimeout(() => {
-                                item.classList.add('flip');
-                                item.classList.add('green');
-                                key.classList.add('green');
-                            }, 450 * i);
-                            countGreen++;
-                            break;
+                    setTimeout(() => {
+                        dispatch({ type: 'SET_CELL_STATE', payload: { row: rowIndex, col: i, color } });
+                        dispatch({ type: 'SET_KEY_COLOR', payload: { key: letter, color } });
+                    }, 450 * i);
 
-                        case "ORANGE":                              // letter in word excluding repetition
-                            setTimeout(() => {
-                                item.classList.add('flip');
-                                item.classList.add('orange');
-                                key.classList.add('orange');
-                            }, 450 * i);
-                            break;
-
-                        case "GREY":                                // letter not present in word
-                            setTimeout(() => {
-                                item.classList.add('flip');
-                                item.classList.add('grey');
-                                key.classList.add('grey');
-                            }, 450 * i);
-                            break;
-
-                        default:                                    // letter present in word but repeated more than its actual occurence
-                            setTimeout(() => {
-                                item.classList.add('flip');
-                                item.classList.add('grey')
-                            }, 450 * i);
-
-                    }
+                    if (color === 'green') countGreen++;
                 }
 
                 dispatch({ type: 'SUBMIT_WORD' });
@@ -185,8 +151,8 @@ function Home() {
             {(startGame===false || word == null) && <Spinner />}
             {startGame===true && word != null &&
                 <main className='row justify-content-center' >
-                    <Grid grid={grid} isShaking={isShaking} />
-                    <Keyboard handleKeyDown={handleKeyDown} />
+                    <Grid grid={grid} isShaking={isShaking} cellStates={cellStates} />
+                    <Keyboard handleKeyDown={handleKeyDown} keyColors={keyColors} />
                 </main>
             }
             { gameWon && <Confetti width={windowDimensions.width} height={windowDimensions.height} />}

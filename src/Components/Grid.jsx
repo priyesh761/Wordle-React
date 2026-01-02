@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import '../css/grid.css'
-function Grid({grid, isShaking}) {
+function Grid({grid, isShaking, cellStates}) {
     useEffect(() => { document.getElementById('home').focus(); }, [grid]);
     return (
         <div id="#grid" className='grid col-12'>
@@ -8,9 +8,10 @@ function Grid({grid, isShaking}) {
             {
                 grid.map( (row, rindex) => 
                     row.map( (ele, cindex) =>{
+                        const cellState = cellStates[rindex][cindex];
                         return <div key={rindex*5+cindex} data-row = {rindex} data-column = {cindex} 
                                     className={`grid-item card-wrapper ${isShaking[rindex] ? 'shake' : ''}`} type='text' maxLength={1}>
-                                    <div className="card-custom"> 
+                                    <div className={`card-custom ${cellState ? `flip ${cellState}` : ''}`}>
                                         <div className="front">{ele}</div>
                                     </div>
                                 </div>
