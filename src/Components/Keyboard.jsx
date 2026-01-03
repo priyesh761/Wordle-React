@@ -1,3 +1,4 @@
+import React from "react";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import "../css/keyboard.css";
@@ -49,4 +50,4 @@ function KeyboardComponent({ handleKeyDown, keyColors = {} }) {
   );
 }
 
-export default KeyboardComponent;
+export default React.memo(KeyboardComponent);
