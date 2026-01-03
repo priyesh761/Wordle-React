@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useReducer } from "react";
+import React, { useEffect, useState, useReducer, useRef } from "react";
 import axios from "axios";
 import "../css/home.css";
 import Grid from "./Grid";
@@ -9,6 +9,7 @@ import { default as Keyboard } from "./Keyboard";
 import gameReducer, { initialState } from "../reducers/gameReducer";
 
 function Home() {
+  const homeRef = useRef(null);
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const {
     word,
@@ -67,6 +68,7 @@ function Home() {
   useEffect(() => {
     if (freeze === true) setTimeout(() => dispatch({ type: "RESET" }), 8000);
   }, [freeze]);
+  useEffect(() => homeRef.current?.focus(), [grid, startGame]);
   useEffect(() => {
     if (freeze) return;
     if (isEnterPressed !== true) return;
@@ -187,6 +189,7 @@ function Home() {
 
   return (
     <div
+      ref={homeRef}
       id="home"
       className="container-fluid justify-content-around"
       tabIndex={0}
@@ -198,6 +201,7 @@ function Home() {
           setStartGame={() => dispatch({ type: "START_GAME" })}
           showInfo={showInfo}
           setShowInfo={() => dispatch({ type: "TOGGLE_INFO" })}
+          homeRef={homeRef}
         />
       </header>
       {(startGame === false || word == null) && <Spinner />}

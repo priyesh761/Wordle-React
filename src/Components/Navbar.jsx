@@ -1,9 +1,11 @@
 import "../css/navbar.css";
 import "../css/grid.css";
+import { useRef } from "react";
 import { InfoCircle } from "react-bootstrap-icons";
 import { Modal, Button } from "react-bootstrap";
 
-function Navbar({ startGame, setStartGame, showInfo, setShowInfo }) {
+function Navbar({ startGame, setStartGame, showInfo, setShowInfo, homeRef }) {
+  const buttonRef = useRef(null);
   const handleClick = () => {
     setStartGame(true);
     setShowInfo(false);
@@ -26,6 +28,8 @@ function Navbar({ startGame, setStartGame, showInfo, setShowInfo }) {
           aria-labelledby="contained-modal-title-vcenter"
           show={showInfo}
           centered
+          onEntered={() => buttonRef.current?.focus()}
+          onExited={() => homeRef?.current?.focus()}
         >
           <Modal.Header className="justify-content-center">
             <Modal.Title id="contained-modal-title-vcenter">
@@ -118,6 +122,7 @@ function Navbar({ startGame, setStartGame, showInfo, setShowInfo }) {
           </Modal.Body>
           <Modal.Footer>
             <Button
+              ref={buttonRef}
               className="col-12"
               onClick={() => {
                 handleClick();
