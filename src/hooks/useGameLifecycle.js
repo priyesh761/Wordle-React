@@ -1,9 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useGameActions } from "./useGameActions";
 import { fetchRandomWord } from "../services/wordService";
 
 // Timing constants (ms)
 const RESET_DELAY = 8000;
+
+// Pattern constants for keyboard input
+const LETTERS_PATTERN = /[A-Z]/;
+const ENTER_PATTERN = /enter|{enter}/i;
+const BACKSPACE_PATTERN = /backspace|{bksp}/i;
 
 /**
  * Custom hook that manages all game lifecycle side effects.
@@ -11,7 +16,7 @@ const RESET_DELAY = 8000;
  *
  * @param {Object} state - The game state from useReducer
  * @param {Function} dispatch - The dispatch function from useReducer
- * @returns {Object} - Contains focusContainerRef and handleTypeLetter
+ * @returns {Object} - Contains focusContainerRef and handleKeyDown
  */
 export function useGameLifecycle(state, dispatch) {
   // Ref for the element that receives keyboard focus
@@ -21,7 +26,7 @@ export function useGameLifecycle(state, dispatch) {
   const { handleEnterPressed, handleBackspacePressed, handleTypeLetter } =
     useGameActions(state, dispatch);
 
-  const { startGame, gameWon, grid, isEnterPressed, isBackspacePressed } = state;
+  const { startGame, gameWon, grid, columnIndex, isEnterPressed, isBackspacePressed } = state;
 
   // Initialize word when game starts
   useEffect(() => {
@@ -60,8 +65,33 @@ export function useGameLifecycle(state, dispatch) {
     if (isBackspacePressed) handleBackspacePressed();
   }, [isBackspacePressed, handleBackspacePressed]);
 
+  // Keyboard input handler
+  const handleKeyDown = useCallback(
+    (key) => {
+      if (gameWon !== null) return;
+
+      if (
+        columnIndex === 5 &&
+        key.toLowerCase().match(ENTER_PATTERN) !== null
+      ) {
+        dispatch({ type: "SET_ENTER_PRESSED", payload: true });
+      } else if (key.toLowerCase().match(BACKSPACE_PATTERN)) {
+        dispatch({ type: "SET_BACKSPACE_PRESSED", payload: true });
+      } else {
+        if (
+          columnIndex === 5 ||
+          key.length !== 1 ||
+          key.match(LETTERS_PATTERN) === null
+        )
+          return;
+        handleTypeLetter(key);
+      }
+    },
+    [gameWon, columnIndex, handleTypeLetter, dispatch]
+  );
+
   return {
     focusContainerRef,
-    handleTypeLetter
+    handleKeyDown
   };
 }
