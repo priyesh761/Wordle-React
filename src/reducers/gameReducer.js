@@ -6,11 +6,9 @@ export const initialState = {
     clickedCell: null,
     rowIndex : 0,
     columnIndex : 0,
-    isTyping : false,
     isEnterPressed : false,
     isBackspacePressed : false,
     word : null,
-    freeze : false,
     startGame : false,
     showInfo : true,
     gameWon : null
@@ -21,7 +19,7 @@ export default function gameReducer(state, action) {
     case 'START_GAME':
       return { ...state, startGame: true };
     case 'SET_WORD':
-      return { ...state, word: action.payload, isTyping: true };
+      return { ...state, word: action.payload };
     case 'TYPE_LETTER': {
       const { rowIndex, columnIndex, grid } = state;
       if (rowIndex >= grid.length || columnIndex >= grid[rowIndex].length || columnIndex < 0) {
@@ -32,8 +30,7 @@ export default function gameReducer(state, action) {
       return { 
         ...state, 
         grid: newGrid,
-        columnIndex: columnIndex + 1,
-        isTyping: columnIndex < 4 // Stop typing when reaching column 4
+        columnIndex: columnIndex + 1
       };
     }
     case 'DELETE_LETTER': {
@@ -46,8 +43,7 @@ export default function gameReducer(state, action) {
       return { 
         ...state, 
         grid: newGrid,
-        columnIndex: columnIndex - 1,
-        isTyping: true
+        columnIndex: columnIndex - 1
       };
     }
     case 'SUBMIT_WORD': {
@@ -59,7 +55,6 @@ export default function gameReducer(state, action) {
         ...state, 
         rowIndex: rowIndex + 1,
         columnIndex: 0,
-        isTyping: true,
         isEnterPressed: false
       };
     }
@@ -73,34 +68,25 @@ export default function gameReducer(state, action) {
       newIsShaking[row] = value;
       return { ...state, isShaking: newIsShaking };
     }
-    case 'SET_CELL_STATE': {
-      const { row, col, color } = action.payload;
+    case 'SET_LETTER_FEEDBACK': {
+      const { row, col, color, key } = action.payload;
+      // Update cell state
       const newCellStates = state.cellStates.map(r => [...r]);
       newCellStates[row][col] = color;
-      return { ...state, cellStates: newCellStates };
-    }
-    case 'SET_KEY_COLOR': {
-      const { key, color } = action.payload;
-      // Only update if new color has higher priority (green > orange > grey)
+      // Update key color (with priority check)
       const colorPriority = { green: 3, orange: 2, grey: 1 };
       const currentColor = state.keyColors[key];
-      if (currentColor && colorPriority[currentColor] >= colorPriority[color]) {
-        return state;
-      }
-      return { ...state, keyColors: { ...state.keyColors, [key]: color } };
+      const newKeyColors = (currentColor && colorPriority[currentColor] >= colorPriority[color])
+        ? state.keyColors
+        : { ...state.keyColors, [key]: color };
+      return { ...state, cellStates: newCellStates, keyColors: newKeyColors };
     }
     case 'SET_CLICKED_CELL':
       return { ...state, clickedCell: action.payload };
-    case 'SET_FREEZE':
-      return { ...state, freeze: action.payload };
-    case 'SET_GAME_WON':
-      return { ...state, gameWon: action.payload, freeze: true };
     case 'TOGGLE_INFO':
       return { ...state, showInfo: !state.showInfo };
-    case 'GAME_WON':
-      return { ...state, gameWon: true, freeze: true };
-    case 'GAME_LOST':
-      return { ...state, freeze: true };
+    case 'GAME_OVER':
+      return { ...state, gameWon: action.payload.won };
     case 'RESET':
       return initialState;
     default:

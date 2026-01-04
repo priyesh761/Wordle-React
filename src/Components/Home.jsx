@@ -1,11 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useReducer,
-  useRef,
-  useCallback,
-} from "react";
-import axios from "axios";
+import React, { useEffect, useReducer, useRef, useCallback } from "react";
 import "../css/home.css";
 import Grid from "./Grid";
 import Navbar from "./Navbar";
@@ -13,6 +6,9 @@ import Spinner from "./Spinner";
 import Confetti from "react-confetti";
 import { default as Keyboard } from "./Keyboard";
 import gameReducer, { initialState } from "../reducers/gameReducer";
+import { fetchRandomWord, validateWord } from "../services/wordService";
+import { getLetterColors, isGameWon } from "../utils/wordUtils";
+import { useWindowDimensions } from "../hooks/useWindowDimensions";
 
 function Home() {
   const homeRef = useRef(null);
@@ -22,9 +18,7 @@ function Home() {
     startGame,
     grid,
     columnIndex,
-    isTyping,
     rowIndex,
-    freeze,
     showInfo,
     gameWon,
     isEnterPressed,
@@ -35,103 +29,35 @@ function Home() {
     clickedCell,
   } = state;
 
-  const [windowDimensions, setWindowDimensions] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
+  const windowDimensions = useWindowDimensions();
 
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const getWord = async () => {
-    try {
-      let data = await axios.get(
-        "https://random-word-api.herokuapp.com/word?length=5"
-      );
-      let word = data.data[0];
-      await axios.get(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
-      );
-      dispatch({ type: "SET_WORD", payload: word.toUpperCase() });
-      console.log("Word Initialized");
-    } catch {
-      await getWord(); // All words from first API are not present in second API
-    }
-  };
   useEffect(() => {
     if (startGame === false) return;
-    getWord();
-    // eslint-disable-next-line
+    const initializeWord = async () => {
+      try {
+        const word = await fetchRandomWord();
+        dispatch({ type: "SET_WORD", payload: word });
+        console.log("Word Initialized");
+      } catch (error) {
+        console.error("Failed to initialize word:", error.message);
+      }
+    };
+    initializeWord();
   }, [startGame]);
   useEffect(() => {
-    if (freeze === true) setTimeout(() => dispatch({ type: "RESET" }), 8000);
-  }, [freeze]);
+    if (gameWon !== null) setTimeout(() => dispatch({ type: "RESET" }), 8000);
+  }, [gameWon]);
   useEffect(() => homeRef.current?.focus(), [grid, startGame]);
   useEffect(() => {
-    if (freeze) return;
+    if (gameWon !== null) return;
     if (isEnterPressed !== true) return;
 
-    let currentWord = grid[rowIndex].join("");
+    const currentWord = grid[rowIndex].join("");
 
-    axios
-      .get(`https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord}`)
-      .then(() => {
-        // Handle Valid Word
-        let actualWord = word.split("");
-        let letterColorMap = Array.from({ length: 5 }, () => "grey");
+    const handleWordSubmission = async () => {
+      const isValid = await validateWord(currentWord);
 
-        for (let i = 0; i < currentWord.length; i++) {
-          if (currentWord[i] === actualWord[i]) {
-            letterColorMap[i] = "green";
-            actualWord[i] = "$";
-          }
-        }
-        for (let i = 0; i < currentWord.length; i++) {
-          if (
-            letterColorMap[i] !== "green" &&
-            actualWord.includes(currentWord[i])
-          ) {
-            letterColorMap[i] = "orange";
-            let index = actualWord.indexOf(currentWord[i]);
-            actualWord[index] = "$";
-          }
-        }
-
-        let countGreen = 0;
-        for (let i = 0; i < currentWord.length; i++) {
-          const color = letterColorMap[i];
-          const letter = currentWord[i];
-
-          setTimeout(() => {
-            dispatch({
-              type: "SET_CELL_STATE",
-              payload: { row: rowIndex, col: i, color },
-            });
-            dispatch({
-              type: "SET_KEY_COLOR",
-              payload: { key: letter, color },
-            });
-          }, 450 * i);
-
-          if (color === "green") countGreen++;
-        }
-
-        dispatch({ type: "SUBMIT_WORD" });
-        if (rowIndex === 5 && columnIndex === 5)
-          dispatch({ type: "SET_FREEZE", payload: true });
-        if (countGreen === 5) {
-          dispatch({ type: "GAME_WON" });
-        }
-      })
-      .catch(() => {
+      if (!isValid) {
         dispatch({
           type: "SET_ROW_SHAKING",
           payload: { row: rowIndex, value: true },
@@ -144,10 +70,36 @@ function Home() {
         }, 1000);
         dispatch({ type: "SET_ENTER_PRESSED", payload: false });
         return;
-      });
+      }
+
+      const letterColors = getLetterColors(currentWord, word);
+
+      for (let i = 0; i < currentWord.length; i++) {
+        setTimeout(() => {
+          dispatch({
+            type: "SET_LETTER_FEEDBACK",
+            payload: {
+              row: rowIndex,
+              col: i,
+              color: letterColors[i],
+              key: currentWord[i],
+            },
+          });
+        }, 450 * i);
+      }
+
+      dispatch({ type: "SUBMIT_WORD" });
+
+      const won = isGameWon(letterColors);
+      if (won || (rowIndex === 5 && columnIndex === 5)) {
+        dispatch({ type: "GAME_OVER", payload: { won } });
+      }
+    };
+
+    handleWordSubmission();
   }, [isEnterPressed]);
   useEffect(() => {
-    if (freeze) return;
+    if (gameWon !== null) return;
     if (isBackspacePressed === false) return;
     dispatch({ type: "DELETE_LETTER" });
 
@@ -166,18 +118,18 @@ function Home() {
   }, [isBackspacePressed]);
   const handleKeyDown = useCallback(
     (key) => {
-      if (freeze) return;
+      if (gameWon !== null) return;
       const lettersPattern = /[A-Z]/;
       const enterPattern = /enter|{enter}/; // enter or  {enter}
       const backspacePattern = /backspace|{bksp}/; // backspace or {bksp}
 
-      if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
+      if (columnIndex === 5 && key.toLowerCase().match(enterPattern) != null) {
         dispatch({ type: "SET_ENTER_PRESSED", payload: true });
       } else if (key.toLowerCase().match(backspacePattern))
         dispatch({ type: "SET_BACKSPACE_PRESSED", payload: true });
       else {
         if (
-          isTyping === false ||
+          columnIndex === 5 ||
           key.length !== 1 ||
           key.match(lettersPattern) == null
         )
@@ -193,7 +145,7 @@ function Home() {
         dispatch({ type: "TYPE_LETTER", payload: key.toUpperCase() });
       }
     },
-    [freeze, isTyping, rowIndex, columnIndex, dispatch]
+    [gameWon, columnIndex, rowIndex, dispatch]
   );
 
   return (
