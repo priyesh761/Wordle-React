@@ -4,7 +4,13 @@ import { useRef } from "react";
 import { InfoCircle } from "react-bootstrap-icons";
 import { Modal, Button } from "react-bootstrap";
 
-function Navbar({ startGame, setStartGame, showInfo, setShowInfo, homeRef }) {
+function Navbar({
+  startGame,
+  setStartGame,
+  showInfo,
+  setShowInfo,
+  focusContainerRef,
+}) {
   const buttonRef = useRef(null);
   const handleClick = () => {
     setStartGame(true);
@@ -29,7 +35,7 @@ function Navbar({ startGame, setStartGame, showInfo, setShowInfo, homeRef }) {
           show={showInfo}
           centered
           onEntered={() => buttonRef.current?.focus()}
-          onExited={() => homeRef?.current?.focus()}
+          onExited={() => focusContainerRef?.current?.focus()}
         >
           <Modal.Header className="justify-content-center">
             <Modal.Title id="contained-modal-title-vcenter">

@@ -11,7 +11,8 @@ export const initialState = {
     word : null,
     startGame : false,
     showInfo : true,
-    gameWon : null
+    gameWon : null,
+    error: null
 }
 
 export default function gameReducer(state, action) {
@@ -87,6 +88,8 @@ export default function gameReducer(state, action) {
       return { ...state, showInfo: !state.showInfo };
     case 'GAME_OVER':
       return { ...state, gameWon: action.payload.won };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload };
     case 'RESET':
       return initialState;
     default:

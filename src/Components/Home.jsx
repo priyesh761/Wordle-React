@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef, useCallback } from "react";
+import React, { useReducer, useCallback } from "react";
 import "../css/home.css";
 import Grid from "./Grid";
 import Navbar from "./Navbar";
@@ -6,20 +6,15 @@ import Spinner from "./Spinner";
 import Confetti from "react-confetti";
 import { default as Keyboard } from "./Keyboard";
 import gameReducer, { initialState } from "../reducers/gameReducer";
-import { fetchRandomWord } from "../services/wordService";
 import { useWindowDimensions } from "../hooks/useWindowDimensions";
-import { useGameActions } from "../hooks/useGameActions";
+import { useGameLifecycle } from "../hooks/useGameLifecycle";
 
 // Pattern constants
 const LETTERS_PATTERN = /[A-Z]/;
 const ENTER_PATTERN = /enter|{enter}/i;
 const BACKSPACE_PATTERN = /backspace|{bksp}/i;
 
-// Timing constants (ms)
-const RESET_DELAY = 8000;
-
 function Home() {
-  const homeRef = useRef(null);
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const {
     word,
@@ -28,8 +23,6 @@ function Home() {
     columnIndex,
     showInfo,
     gameWon,
-    isEnterPressed,
-    isBackspacePressed,
     isShaking,
     cellStates,
     keyColors,
@@ -37,8 +30,12 @@ function Home() {
   } = state;
 
   const windowDimensions = useWindowDimensions();
-  const { handleEnterPressed, handleBackspacePressed, handleTypeLetter } =
-    useGameActions(state, dispatch);
+
+  // hook to handle all game lifecycle effects
+  const { focusContainerRef, handleTypeLetter } = useGameLifecycle(
+    state,
+    dispatch
+  );
 
   // Memoized callbacks for Navbar
   const handleStartGame = useCallback(
@@ -50,45 +47,15 @@ function Home() {
     []
   );
 
-  // Initialize word when game starts
-  useEffect(() => {
-    if (startGame === false) return;
-    const initializeWord = async () => {
-      try {
-        const word = await fetchRandomWord();
-        dispatch({ type: "SET_WORD", payload: word });
-      } catch (error) {
-        console.error("Failed to initialize word:", error.message);
-      }
-    };
-    initializeWord();
-  }, [startGame]);
-
-  // Reset game after win/lose
-  useEffect(() => {
-    if (gameWon !== null)
-      setTimeout(() => dispatch({ type: "RESET" }), RESET_DELAY);
-  }, [gameWon]);
-
-  // Focus home element for keyboard input
-  useEffect(() => homeRef.current?.focus(), [grid, startGame]);
-
-  // Handle Enter key press
-  useEffect(() => {
-    if (isEnterPressed) handleEnterPressed();
-  }, [isEnterPressed, handleEnterPressed]);
-
-  // Handle Backspace key press
-  useEffect(() => {
-    if (isBackspacePressed) handleBackspacePressed();
-  }, [isBackspacePressed, handleBackspacePressed]);
-
   // Keyboard input handler
   const handleKeyDown = useCallback(
     (key) => {
       if (gameWon !== null) return;
 
-      if (columnIndex === 5 && key.toLowerCase().match(ENTER_PATTERN) != null) {
+      if (
+        columnIndex === 5 &&
+        key.toLowerCase().match(ENTER_PATTERN) !== null
+      ) {
         dispatch({ type: "SET_ENTER_PRESSED", payload: true });
       } else if (key.toLowerCase().match(BACKSPACE_PATTERN)) {
         dispatch({ type: "SET_BACKSPACE_PRESSED", payload: true });
@@ -96,7 +63,7 @@ function Home() {
         if (
           columnIndex === 5 ||
           key.length !== 1 ||
-          key.match(LETTERS_PATTERN) == null
+          key.match(LETTERS_PATTERN) === null
         )
           return;
         handleTypeLetter(key);
@@ -107,7 +74,7 @@ function Home() {
 
   return (
     <div
-      ref={homeRef}
+      ref={focusContainerRef}
       id="home"
       className="container-fluid justify-content-around"
       tabIndex={0}
@@ -119,7 +86,7 @@ function Home() {
           setStartGame={handleStartGame}
           showInfo={showInfo}
           setShowInfo={handleToggleInfo}
-          homeRef={homeRef}
+          focusContainerRef={focusContainerRef}
         />
       </header>
       {(startGame === false || word == null) && <Spinner />}
