@@ -1,42 +1,45 @@
-input {
-    width: 100%;
-    height: 100px;
-    padding: 20px;
-    font-size: 20px;
-    border: none;
-    box-sizing: border-box;
-  }
-  
-  .simple-keyboard {
-    max-width: 850px;
-  }
-  
-  /*
-    Theme: myTheme1
-  */
-  .simple-keyboard.myTheme1 {
-    background-color: transparent;
-    border-radius: 1;
-  }
-  
-  .simple-keyboard.myTheme1 .hg-button {
-    height: 40px;
-    min-width: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 0;
-    background: #818384;
-    color: white;
-  }
-  
-  @media (max-width: 750px) {
-    .simple-keyboard.myTheme1 .hg-button {
-      height: auto;
-      min-width: auto;
-    }
-  }
+.wordle-keyboard {
+  max-width: 850px;
+}
 
-  .keyboard{
-    margin: 5px;
+.wordle-keyboard.wordle-theme {
+  background-color: transparent;
+  border-radius: 1;
+}
+
+.wordle-keyboard.wordle-theme .wordle-key {
+  height: 40px;
+  min-width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 0;
+  background: #818384;
+  color: white;
+}
+
+@media (max-width: 750px) {
+  .wordle-keyboard.wordle-theme .wordle-key {
+    height: auto;
+    min-width: auto;
   }
+}
+
+.wordle-keyboard .wordle-key {
+  transition: background-color 500ms ease-in;
+}
+
+.wordle-keyboard .wordle-key.key-green {
+  background-color: #538d4e;
+  color: white;
+}
+
+.wordle-keyboard .wordle-key.key-orange {
+  background-color: #b59f3b;
+  color: white;
+}
+
+.wordle-keyboard .wordle-key.key-grey {
+  background-color: #3a3a3c;
+  color: white;
+}
