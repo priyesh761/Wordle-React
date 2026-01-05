@@ -1,9 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useGameActions } from "./useGameActions";
 import { fetchRandomWord } from "../services/wordService";
-
-// Timing constants (ms)
-const RESET_DELAY = 8000;
+import { RESET_DELAY } from "../constants/timing";
 
 // Pattern constants for keyboard input
 const LETTERS_PATTERN = /[A-Z]/;

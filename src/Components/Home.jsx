@@ -3,12 +3,12 @@ import "../css/home.css";
 import Grid from "./Grid";
 import Navbar from "./Navbar";
 import Spinner from "./Spinner";
-import { default as Keyboard } from "./Keyboard";
 import gameReducer, { initialState } from "../reducers/gameReducer";
 import { useWindowDimensions } from "../hooks/useWindowDimensions";
 import { useGameLifecycle } from "../hooks/useGameLifecycle";
 
-// Lazy load Confetti - only needed on win
+// Lazy load heavy third-party components
+const Keyboard = React.lazy(() => import("./Keyboard"));
 const Confetti = React.lazy(() => import("react-confetti"));
 
 function Home() {
@@ -62,15 +62,17 @@ function Home() {
       </header>
       {(!startGame || !word) && <Spinner />}
       {startGame && word && (
-        <main className="row justify-content-center">
-          <Grid
-            grid={grid}
-            isShaking={isShaking}
-            cellStates={cellStates}
-            clickedCell={clickedCell}
-          />
-          <Keyboard handleKeyDown={handleKeyDown} keyColors={keyColors} />
-        </main>
+        <Suspense fallback={<Spinner />}>
+          <main className="row justify-content-center">
+            <Grid
+              grid={grid}
+              isShaking={isShaking}
+              cellStates={cellStates}
+              clickedCell={clickedCell}
+            />
+            <Keyboard handleKeyDown={handleKeyDown} keyColors={keyColors} />
+          </main>
+        </Suspense>
       )}
       {gameWon && (
         <Suspense fallback={null}>

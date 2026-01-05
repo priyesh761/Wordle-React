@@ -1,11 +1,11 @@
 import { useCallback } from "react";
 import { validateWord } from "../services/wordService";
 import { getLetterColors, isGameWon } from "../utils/wordUtils";
-
-// Timing constants (ms)
-const SHAKE_DURATION = 1000;
-const LETTER_REVEAL_INTERVAL = 450;
-const CLICK_ANIMATION_DURATION = 500;
+import {
+  SHAKE_DURATION,
+  LETTER_REVEAL_INTERVAL,
+  CLICK_ANIMATION_DURATION,
+} from "../constants/timing";
 
 /**
  * Custom hook providing callbacks for game actions.
