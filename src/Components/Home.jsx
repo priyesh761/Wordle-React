@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useReducer, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useReducer,
+  useRef,
+  useCallback,
+} from "react";
 import axios from "axios";
 import "../css/home.css";
 import Grid from "./Grid";
@@ -158,34 +164,37 @@ function Home() {
 
     dispatch({ type: "SET_BACKSPACE_PRESSED", payload: false });
   }, [isBackspacePressed]);
-  const handleKeyDown = (key) => {
-    if (freeze) return;
-    const lettersPattern = /[A-Z]/;
-    const enterPattern = /enter|{enter}/; // enter or  {enter}
-    const backspacePattern = /backspace|{bksp}/; // backspace or {bksp}
+  const handleKeyDown = useCallback(
+    (key) => {
+      if (freeze) return;
+      const lettersPattern = /[A-Z]/;
+      const enterPattern = /enter|{enter}/; // enter or  {enter}
+      const backspacePattern = /backspace|{bksp}/; // backspace or {bksp}
 
-    if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
-      dispatch({ type: "SET_ENTER_PRESSED", payload: true });
-    } else if (key.toLowerCase().match(backspacePattern))
-      dispatch({ type: "SET_BACKSPACE_PRESSED", payload: true });
-    else {
-      if (
-        isTyping === false ||
-        key.length !== 1 ||
-        key.match(lettersPattern) == null
-      )
-        return;
-      dispatch({
-        type: "SET_CLICKED_CELL",
-        payload: { row: rowIndex, col: columnIndex },
-      });
-      setTimeout(
-        () => dispatch({ type: "SET_CLICKED_CELL", payload: null }),
-        500
-      );
-      dispatch({ type: "TYPE_LETTER", payload: key.toUpperCase() });
-    }
-  };
+      if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
+        dispatch({ type: "SET_ENTER_PRESSED", payload: true });
+      } else if (key.toLowerCase().match(backspacePattern))
+        dispatch({ type: "SET_BACKSPACE_PRESSED", payload: true });
+      else {
+        if (
+          isTyping === false ||
+          key.length !== 1 ||
+          key.match(lettersPattern) == null
+        )
+          return;
+        dispatch({
+          type: "SET_CLICKED_CELL",
+          payload: { row: rowIndex, col: columnIndex },
+        });
+        setTimeout(
+          () => dispatch({ type: "SET_CLICKED_CELL", payload: null }),
+          500
+        );
+        dispatch({ type: "TYPE_LETTER", payload: key.toUpperCase() });
+      }
+    },
+    [freeze, isTyping, rowIndex, columnIndex, dispatch]
+  );
 
   return (
     <div

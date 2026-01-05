@@ -33,4 +33,4 @@ function Grid({ grid, isShaking, cellStates, clickedCell }) {
   );
 }
 
-export default Grid;
+export default React.memo(Grid);
