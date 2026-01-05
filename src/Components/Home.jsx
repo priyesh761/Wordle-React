@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useReducer } from 'react';
 import axios from 'axios';
 import '../css/home.css';
 import Grid from './Grid';
@@ -6,39 +6,13 @@ import Navbar from './Navbar';
 import Spinner from './Spinner';
 import Confetti from 'react-confetti'
 import { default as Keyboard } from './Keyboard';
-
-const initState = {
-    grid: [[' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ']],
-    rowIndex : 0,
-    columnIndex : 0,
-    isTyping : false,
-    isEnterPressed : false,
-    isBackspacePressed : false,
-    word : null,
-    freeze : false,
-    startGame : false,
-    showInfo : true,
-    gameWon : null
-}
+import gameReducer, {initialState} from '../reducers/gameReducer';
 
 function Home() {
 
-    const [grid, setGrid] = useState(JSON.parse(JSON.stringify(initState.grid)));
-    const [rowIndex, setRowIndex] = useState(initState.rowIndex);
-    const [columnIndex, setColumnIndex] = useState(initState.columnIndex);
-    const [isTyping, setIsTyping] = useState(initState.isTyping);
-    const [isEnterPressed, setIsEnterPressed] = useState(initState.isEnterPressed);
-    const [isBackspacePressed, setBackspacePressed] = useState(initState.isBackspacePressed);
-    const [word, setWord] = useState(initState.word);
-    const [freeze, setFreeze] = useState(initState.freeze);
-    const [startGame, setStartGame] = useState(initState.startGame);
-    const [showInfo, setShowInfo] = useState(initState.showInfo);
-    const [gameWon, setGameWon] = useState(initState.gameWon);
+    const [state, dispatch] = useReducer(gameReducer, initialState);
+    const { word, startGame, grid, columnIndex, isTyping, rowIndex, freeze, showInfo, gameWon, isEnterPressed, isBackspacePressed } = state;
+
     const [windowDimensions, setWindowDimensions] = useState({ 
         width: window.innerWidth, 
         height: window.innerHeight 
@@ -55,26 +29,12 @@ function Home() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const setInitState = () => {
-        setGrid(JSON.parse(JSON.stringify(initState.grid)));
-        setRowIndex(initState.rowIndex);
-        setColumnIndex(initState.columnIndex);
-        setIsTyping(initState.isTyping);
-        setIsEnterPressed(initState.isEnterPressed);
-        setBackspacePressed(initState.isBackspacePressed);
-        setWord(initState.null);
-        setFreeze(initState.freeze);
-        setStartGame(initState.startGame);
-        setShowInfo(initState.showInfo);
-        setGameWon(initState.gameWon);
-    }  
     const getWord = async () => {
         try {
             let data = await axios.get('https://random-word-api.herokuapp.com/word?length=5');
             let word = data.data[0];
             await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-            setWord(word.toUpperCase());
-            setIsTyping(true);
+            dispatch({ type: 'SET_WORD', payload: word.toUpperCase() });
             console.log("Word Initialized");
         } catch {
             await getWord(); // All words from first API are not present in second API
@@ -87,9 +47,7 @@ function Home() {
     }, [startGame]);
     useEffect(()=>{
         if(freeze===true)
-            setTimeout(()=>{
-                setInitState();
-            }, 8000)
+            setTimeout(()=> dispatch({ type: 'RESET' }), 8000)
     }, [freeze])
     useEffect(() => {
         if(freeze) return;
@@ -166,55 +124,37 @@ function Home() {
                     }
                 }
 
-                // Handle index
-                if (rowIndex < 5) setIsTyping(true);
-                setColumnIndex(() => rowIndex === 5 ? columnIndex : 0);
-                setRowIndex(rowIndex => rowIndex === 5 ? rowIndex : rowIndex + 1);
-
-                if(rowIndex===5&&columnIndex===5) setFreeze(true);
+                dispatch({ type: 'SUBMIT_WORD' });
+                if(rowIndex===5&&columnIndex===5) dispatch({ type: 'SET_FREEZE', payload: true });
                 if(countGreen===5){ 
-                    setGameWon(true);
-                    setFreeze(true);
+                    dispatch({ type: 'GAME_WON' });
                 }
-                //console.log('updated');
             })
-            .catch((err) => {
-                //console.log(err);
+            .catch(() => {
                 document.querySelectorAll(`[data-row="${rowIndex}"]`)
                     .forEach(ele => {
                         ele.classList.add('shake');
                         setTimeout(() => { ele.classList.remove('shake') }, 1000);
                     });
+                dispatch({ type: 'SET_ENTER_PRESSED', payload: false });
                 return;
-            }).finally(() => {
-                setIsEnterPressed(false);
             });
-        // eslint-disable-next-line
     }, [isEnterPressed]);
     useEffect(() => {
         if(freeze) return;
         if (isBackspacePressed === false) return;
-        //console.log("backspace");
-        setIsTyping(true);
+    dispatch({ type: 'DELETE_LETTER' });
         
-        setColumnIndex(columnIndex => {
-            if (columnIndex === 0)
-                return columnIndex;
-            setGrid(grid => {
-                //current column index points to fist " " so columnIndex-1 points to last alphabet
-                const newGrid = grid.map(row => [...row]);
-                newGrid[rowIndex][columnIndex - 1] = " ";
-                const selector = `[data-row="${rowIndex}"][data-column="${columnIndex - 1}"]`;
-                document.querySelector(selector).classList.add('clicked');
-                setTimeout(() => { document.querySelector(selector).classList.remove('clicked') }, 500);
-                return newGrid;
-            });
-            return columnIndex - 1
-        });
+        if (columnIndex > 0) {
+            const selector = `[data-row="${rowIndex}"][data-column="${columnIndex - 1}"]`;
+            const element = document.querySelector(selector);
+            if (element) {
+                element.classList.add('clicked');
+                setTimeout(() => { element.classList.remove('clicked') }, 500);
+            }
+        }
 
-        setBackspacePressed(false);
-
-        // eslint-disable-next-line
+        dispatch({ type: 'SET_BACKSPACE_PRESSED', payload: false });
     }, [isBackspacePressed]);
     const handleKeyDown = (key) => {
         if(freeze) return;
@@ -223,40 +163,31 @@ function Home() {
         const backspacePattern = /backspace|{bksp}/;           // backspace or {bksp}
         
         if (isTyping === false && key.toLowerCase().match(enterPattern) != null) {
-            setIsEnterPressed(true);
+            dispatch({ type: 'SET_ENTER_PRESSED', payload: true });
         } else if (key.toLowerCase().match(backspacePattern))
-            setBackspacePressed(true);
+            dispatch({ type: 'SET_BACKSPACE_PRESSED', payload: true });
         else {
             if (isTyping === false || key.length !== 1 || key.match(lettersPattern) == null) return;
-
-            setGrid(grid => {
-                const newGrid = grid.map(row => [...row]);
-                if (rowIndex < newGrid.length && columnIndex < newGrid[rowIndex].length && columnIndex >= 0) {
-                    newGrid[rowIndex][columnIndex] = key.toUpperCase();
-                    const selector = `[data-row="${rowIndex}"][data-column="${columnIndex}"]`;
-                    document.querySelector(selector).classList.add('clicked');
-                    setTimeout(() => { document.querySelector(selector).classList.remove('clicked') }, 500);
-                }
-                return newGrid;
-            })
-            setColumnIndex(colInd => {
-                if (colInd === 4)
-                    setIsTyping(false);
-                return colInd + 1;
-            });
+            dispatch({ type: 'TYPE_LETTER', payload: key.toUpperCase() });
+            const selector = `[data-row="${rowIndex}"][data-column="${columnIndex}"]`;
+            const element = document.querySelector(selector);
+            if (element) {
+                element.classList.add('clicked');
+                setTimeout(() => { element.classList.remove('clicked') }, 500);
+            }
         }
     };
 
     return (
         <div id="home" className='container-fluid justify-content-around' tabIndex={0} onKeyDown={(e) => handleKeyDown(e.key.toUpperCase())}>
             <header className='row'>
-                <Navbar startGame={startGame} setStartGame={setStartGame} showInfo={showInfo} setShowInfo={setShowInfo}/>
+                <Navbar startGame={startGame} setStartGame={() => dispatch({ type: 'START_GAME' })} showInfo={showInfo} setShowInfo={() => dispatch({ type: 'TOGGLE_INFO' })}/>
             </header>
             {(startGame===false || word == null) && <Spinner />}
             {startGame===true && word != null &&
                 <main className='row justify-content-center' >
                     <Grid grid={grid} rowIndex={rowIndex} columnIndex={columnIndex} />
-                    <Keyboard setGrid={setGrid} handleKeyDown={handleKeyDown} />
+                    <Keyboard handleKeyDown={handleKeyDown} />
                 </main>
             }
             { gameWon && <Confetti width={windowDimensions.width} height={windowDimensions.height} />}
